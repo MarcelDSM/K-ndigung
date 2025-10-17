@@ -412,159 +412,55 @@
         </div>
     </div>
     
-    <script>
+  <script>
 document.addEventListener("DOMContentLoaded", function () {
-  const N8N_WEBHOOK_URL = "https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook";
+  const form = document.querySelector("form");
+  const N8N_WEBHOOK_URL = "https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook"; // <– deine echte Webhook-URL
 
-  const form = document.getElementById("kuendigungsForm");
-  const successMessage = document.getElementById("successMessage");
-  const errorMessage = document.getElementById("errorMessage");
-  const loading = document.getElementById("loading");
-  const submitBtn = document.getElementById("submitBtn");
-  const signatureCanvas = document.getElementById("signatureCanvas");
-  const clearSignatureBtn = document.getElementById("clearSignature");
-  const signatureError = document.getElementById("signatureError");
-
-  const ctx = signatureCanvas.getContext("2d", { willReadFrequently: true });
-
-  let isDrawing = false;
-  let hasSignature = false;
-  let lastX = 0;
-  let lastY = 0;
-
-  function resizeCanvas() {
-    const rect = signatureCanvas.getBoundingClientRect();
-    const dpr = window.devicePixelRatio || 1;
-    signatureCanvas.width = rect.width * dpr;
-    signatureCanvas.height = rect.height * dpr;
-    ctx.scale(dpr, dpr);
-    ctx.lineCap = "round";
-    ctx.lineJoin = "round";
-    ctx.strokeStyle = "#000";
-    ctx.lineWidth = 2;
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-  }
-
-  resizeCanvas();
-  window.addEventListener("resize", resizeCanvas);
-
-  function getCoords(e) {
-    const rect = signatureCanvas.getBoundingClientRect();
-    const x = e.touches ? e.touches[0].clientX - rect.left : e.clientX - rect.left;
-    const y = e.touches ? e.touches[0].clientY - rect.top : e.clientY - rect.top;
-    return { x, y };
-  }
-
-  function startDraw(e) {
+  form.addEventListener("submit", async function (e) {
     e.preventDefault();
-    isDrawing = true;
-    hasSignature = true;
-    signatureError.style.display = "none";
-    const { x, y } = getCoords(e);
-    lastX = x;
-    lastY = y;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-  }
 
-  function draw(e) {
-    if (!isDrawing) return;
-    e.preventDefault();
-    const { x, y } = getCoords(e);
-    ctx.lineTo(x, y);
-    ctx.stroke();
-    lastX = x;
-    lastY = y;
-  }
+    // Daten sammeln
+    const formData = {
+      anrede: document.getElementById("anrede")?.value || "",
+      vorname: document.getElementById("vorname")?.value || "",
+      nachname: document.getElementById("nachname")?.value || "",
+      strasse: document.getElementById("strasse")?.value || "",
+      plz: document.getElementById("plz")?.value || "",
+      ort: document.getElementById("ort")?.value || "",
+      email_kunde: document.getElementById("email_kunde")?.value || "",
+      email_vertrieb: document.getElementById("email_vertrieb")?.value || "",
+      versicherungsnummer: document.getElementById("versicherungsnummer")?.value || "",
+      kuendigungsdatum: document.getElementById("kuendigungsdatum")?.value || "",
+      kk_name: document.getElementById("kk_name")?.value || "",
+      kk_strasse: document.getElementById("kk_strasse")?.value || "",
+      kk_plz: document.getElementById("kk_plz")?.value || "",
+      kk_ort: document.getElementById("kk_ort")?.value || "",
+      unterschrift: signaturePad?.toDataURL() || "",
+    };
 
-  function stopDraw(e) {
-    if (!isDrawing) return;
-    e.preventDefault();
-    isDrawing = false;
-  }
-
-  signatureCanvas.addEventListener("mousedown", startDraw);
-  signatureCanvas.addEventListener("mousemove", draw);
-  signatureCanvas.addEventListener("mouseup", stopDraw);
-  signatureCanvas.addEventListener("mouseleave", stopDraw);
-  signatureCanvas.addEventListener("touchstart", startDraw);
-  signatureCanvas.addEventListener("touchmove", draw);
-  signatureCanvas.addEventListener("touchend", stopDraw);
-  signatureCanvas.addEventListener("touchcancel", stopDraw);
-
-  clearSignatureBtn.addEventListener("click", () => {
-    ctx.fillStyle = "#fff";
-    ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-    hasSignature = false;
-  });
-
-  form.addEventListener("submit", async (e) => {
-  e.preventDefault();
-
-  if (!hasSignature) {
-    signatureError.style.display = "block";
-    signatureCanvas.scrollIntoView({ behavior: "smooth", block: "center" });
-    return;
-  }
-
-  submitBtn.disabled = true;
-  loading.style.display = "block";
-  successMessage.style.display = "none";
-  errorMessage.style.display = "none";
-
-  const signatureDataURL = signatureCanvas.toDataURL("image/png");
-
-  // 🔧 formData wird hier erstellt — im richtigen Scope
-  const formData = {
-    anrede: document.getElementById("anrede").value,
-    vorname: document.getElementById("vorname").value,
-    nachname: document.getElementById("nachname").value,
-    strasse: document.getElementById("strasse").value,
-    plz: document.getElementById("plz").value,
-    ort: document.getElementById("ort").value,
-    email_kunde: document.getElementById("email").value,
-    versicherungsnummer: document.getElementById("versicherungsnummer").value,
-    kuendigungsdatum: document.getElementById("kuendigungsdatum").value,
-    kk_name: document.getElementById("kk_name").value,
-    kk_strasse: document.getElementById("kk_strasse").value,
-    kk_plz: document.getElementById("kk_plz").value,
-    kk_ort: document.getElementById("kk_ort").value,
-    email_vertrieb: document.getElementById("email_vertrieb").value,
-    unterschrift: signatureDataURL,
-  };
-
-  console.log("✅ Sende Daten an:", N8N_WEBHOOK_URL);
-  console.log("📦 FormData:", formData);
-    
+    console.log("📤 Sende an n8n:", formData);
 
     try {
-      const res = await fetch(N8N_WEBHOOK_URL, {
+      const response = await fetch(N8N_WEBHOOK_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(formData),
       });
 
-      if (!res.ok) throw new Error(`Server-Fehler: ${res.status}`);
-
-      successMessage.innerHTML = "✅ <strong>Vielen Dank!</strong> Ihre Kündigung wurde erfolgreich übermittelt.";
-      successMessage.style.display = "block";
-      form.reset();
-      ctx.fillStyle = "#fff";
-      ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
-      hasSignature = false;
-      window.scrollTo({ top: 0, behavior: "smooth" });
+      if (response.ok) {
+        alert("✅ Kündigung erfolgreich gesendet!");
+        form.reset();
+        if (typeof signaturePad !== "undefined") signaturePad.clear();
+      } else {
+        alert("❌ Fehler beim Versenden – bitte versuchen Sie es erneut.");
+      }
     } catch (err) {
-      console.error("❌ Fehler:", err);
-      errorMessage.innerHTML = "❌ <strong>Fehler beim Versenden!</strong><br>Bitte versuchen Sie es erneut.";
-      errorMessage.style.display = "block";
-    } finally {
-      loading.style.display = "none";
-      submitBtn.disabled = false;
+      console.error("Fehler beim Senden:", err);
+      alert("❌ Serverfehler – bitte später erneut versuchen.");
     }
   });
 });
 </script>
-
 </body>
 </html>
