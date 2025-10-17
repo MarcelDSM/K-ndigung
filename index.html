@@ -411,81 +411,99 @@
             </form>
         </div>
     </div>
-    
- <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<!-- 🔹 UNTERSCHRIFT -->
+<div class="form-group">
+  <label for="unterschrift">Bitte unterschreiben Sie hier *</label>
+  <p>Unterschreiben Sie mit der Maus oder mit dem Finger auf dem Touchscreen</p>
 
-<script>
-document.addEventListener("DOMContentLoaded", function () {
-  // Canvas initialisieren
-  const canvas = document.querySelector("canvas");
-  const signaturePad = new SignaturePad(canvas, {
-    backgroundColor: "rgb(255, 255, 255)",
-  });
+  <!-- Canvas-Feld -->
+  <canvas id="signature-pad"></canvas>
 
-  // Buttons
-  const clearButton = document.querySelector("#clear-signature");
-  if (clearButton) {
-    clearButton.addEventListener("click", function (e) {
-      e.preventDefault();
-      signaturePad.clear();
-    });
+  <!-- Buttons -->
+  <div style="margin-top: 10px;">
+    <button type="button" id="clear-signature">Unterschrift löschen</button>
+  </div>
+</div>
+
+<!-- 🔹 CSS -->
+<style>
+  canvas {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    width: 100%;
+    height: 200px;
+    touch-action: none; /* verhindert Scrollen beim Zeichnen */
   }
 
-  // Formular + Webhook
-  const form = document.querySelector("form");
-  const N8N_WEBHOOK_URL = "https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook";
+  #clear-signature {
+    background-color: #34495e;
+    color: #fff;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 4px;
+    cursor: pointer;
+  }
 
-  form.addEventListener("submit", async function (e) {
-    e.preventDefault();
+  #clear-signature:hover {
+    background-color: #2c3e50;
+  }
+</style>
 
-    // Check, ob unterschrieben wurde
-    if (signaturePad.isEmpty()) {
-      alert("❌ Bitte unterschreiben Sie zuerst!");
-      return;
-    }
+<!-- 🔹 JS – SignaturePad initialisieren -->
+<script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+<script>
+  // Canvas-Element holen
+  const canvas = document.getElementById("signature-pad");
+  const clearButton = document.getElementById("clear-signature");
 
-    // Formular-Daten einsammeln
-    const formData = {
-      anrede: document.getElementById("anrede")?.value || "",
-      vorname: document.getElementById("vorname")?.value || "",
-      nachname: document.getElementById("nachname")?.value || "",
-      strasse: document.getElementById("strasse")?.value || "",
-      plz: document.getElementById("plz")?.value || "",
-      ort: document.getElementById("ort")?.value || "",
-      email_kunde: document.getElementById("email_kunde")?.value || "",
-      email_vertrieb: document.getElementById("email_vertrieb")?.value || "",
-      versicherungsnummer: document.getElementById("versicherungsnummer")?.value || "",
-      kuendigungsdatum: document.getElementById("kuendigungsdatum")?.value || "",
-      kk_name: document.getElementById("kk_name")?.value || "",
-      kk_strasse: document.getElementById("kk_strasse")?.value || "",
-      kk_plz: document.getElementById("kk_plz")?.value || "",
-      kk_ort: document.getElementById("kk_ort")?.value || "",
-      unterschrift: signaturePad.toDataURL(),
-    };
-
-    console.log("📤 Sende an n8n:", formData);
-
-    // Daten an n8n senden
-    try {
-      const response = await fetch(N8N_WEBHOOK_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        alert("✅ Kündigung erfolgreich versendet!");
-        form.reset();
-        signaturePad.clear();
-      } else {
-        alert("❌ Fehler beim Versenden. Bitte versuchen Sie es erneut.");
-      }
-    } catch (err) {
-      console.error("Fehler beim Senden:", err);
-      alert("⚠️ Serverfehler. Bitte später erneut versuchen.");
-    }
+  // SignaturePad aktivieren
+  const signaturePad = new SignaturePad(canvas, {
+    backgroundColor: "white",
+    penColor: "black",
   });
-});
+
+  // 🔧 Canvas richtig skalieren (gegen Zoom/Verschiebung)
+  function resizeCanvas() {
+    const ratio = Math.max(window.devicePixelRatio || 1, 1);
+    canvas.width = canvas.offsetWidth * ratio;
+    canvas.height = canvas.offsetHeight * ratio;
+    canvas.getContext("2d").scale(ratio, ratio);
+    signaturePad.clear(); // Signatur löschen nach Resize
+  }
+
+  // Event-Listener für Größenänderungen
+  window.addEventListener("resize", resizeCanvas);
+  resizeCanvas();
+
+  // 🔹 Button zum Löschen der Unterschrift
+  clearButton.addEventListener("click", () => {
+    signaturePad.clear();
+  });
+
+  // 🔹 Unterschrift als Bild exportieren (z. B. beim Formularversand)
+  function getSignatureImage() {
+    if (signaturePad.isEmpty()) {
+      alert("Bitte unterschreiben Sie zuerst!");
+      return null;
+    }
+    // gibt Base64-DataURL zurück
+    return signaturePad.toDataURL("image/png");
+  }
+
+  // Beispiel: bei Formular absenden (falls du das brauchst)
+  const form = document.querySelector("form");
+  if (form) {
+    form.addEventListener("submit", function (event) {
+      const unterschrift = getSignatureImage();
+      if (!unterschrift) {
+        event.preventDefault();
+        return;
+      }
+      console.log("📄 Base64 der Unterschrift:", unterschrift);
+      // hier kannst du unterschrift → Backend / n8n Webhook senden
+    });
+  }
 </script>
+
 </body>
 </html>
