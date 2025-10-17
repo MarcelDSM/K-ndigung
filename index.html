@@ -500,38 +500,43 @@ document.addEventListener("DOMContentLoaded", function () {
   });
 
   form.addEventListener("submit", async (e) => {
-    e.preventDefault();
+  e.preventDefault();
 
-    if (!hasSignature) {
-      signatureError.style.display = "block";
-      signatureCanvas.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
+  if (!hasSignature) {
+    signatureError.style.display = "block";
+    signatureCanvas.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
+  }
 
-    submitBtn.disabled = true;
-    loading.style.display = "block";
-    successMessage.style.display = "none";
-    errorMessage.style.display = "none";
+  submitBtn.disabled = true;
+  loading.style.display = "block";
+  successMessage.style.display = "none";
+  errorMessage.style.display = "none";
 
-    const signatureDataURL = signatureCanvas.toDataURL("image/png");
+  const signatureDataURL = signatureCanvas.toDataURL("image/png");
 
-    const formData = {
-      anrede: document.getElementById("anrede").value,
-      vorname: document.getElementById("vorname").value,
-      nachname: document.getElementById("nachname").value,
-      strasse: document.getElementById("strasse").value,
-      plz: document.getElementById("plz").value,
-      ort: document.getElementById("ort").value,
-      email_kunde: document.getElementById("email").value,
-      versicherungsnummer: document.getElementById("versicherungsnummer").value,
-      kuendigungsdatum: document.getElementById("kuendigungsdatum").value,
-      kk_name: document.getElementById("kk_name").value,
-      kk_strasse: document.getElementById("kk_strasse").value,
-      kk_plz: document.getElementById("kk_plz").value,
-      kk_ort: document.getElementById("kk_ort").value,
-      email_vertrieb: document.getElementById("email_vertrieb").value,
-      unterschrift: signatureDataURL,
-    };
+  // 🔧 formData wird hier erstellt — im richtigen Scope
+  const formData = {
+    anrede: document.getElementById("anrede").value,
+    vorname: document.getElementById("vorname").value,
+    nachname: document.getElementById("nachname").value,
+    strasse: document.getElementById("strasse").value,
+    plz: document.getElementById("plz").value,
+    ort: document.getElementById("ort").value,
+    email_kunde: document.getElementById("email").value,
+    versicherungsnummer: document.getElementById("versicherungsnummer").value,
+    kuendigungsdatum: document.getElementById("kuendigungsdatum").value,
+    kk_name: document.getElementById("kk_name").value,
+    kk_strasse: document.getElementById("kk_strasse").value,
+    kk_plz: document.getElementById("kk_plz").value,
+    kk_ort: document.getElementById("kk_ort").value,
+    email_vertrieb: document.getElementById("email_vertrieb").value,
+    unterschrift: signatureDataURL,
+  };
+
+  console.log("✅ Sende Daten an:", N8N_WEBHOOK_URL);
+  console.log("📦 FormData:", formData);
+    
 
     try {
       const res = await fetch(N8N_WEBHOOK_URL, {
