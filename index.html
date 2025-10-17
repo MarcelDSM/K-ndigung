@@ -1,0 +1,606 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kündigungs-Formular GKV</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f7fa;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 4px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: #1e3a8a;
+            color: white;
+            padding: 30px 40px;
+            border-bottom: 4px solid #1e40af;
+        }
+        
+        .header h1 {
+            font-size: 26px;
+            margin-bottom: 8px;
+            font-weight: 600;
+        }
+        
+        .header p {
+            opacity: 0.95;
+            font-size: 15px;
+            font-weight: 300;
+        }
+        
+        .content {
+            padding: 40px;
+        }
+        
+        .form-section {
+            margin-bottom: 35px;
+            padding-bottom: 25px;
+            border-bottom: 1px solid #e5e7eb;
+        }
+        
+        .form-section:last-of-type {
+            border-bottom: none;
+        }
+        
+        .form-section h2 {
+            color: #1e3a8a;
+            font-size: 18px;
+            margin-bottom: 20px;
+            font-weight: 600;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #374151;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        label .required {
+            color: #dc2626;
+        }
+        
+        input, select, textarea {
+            width: 100%;
+            padding: 11px 14px;
+            border: 1px solid #d1d5db;
+            border-radius: 4px;
+            font-size: 15px;
+            font-family: inherit;
+            transition: all 0.2s ease;
+            background: white;
+        }
+        
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #1e3a8a;
+            box-shadow: 0 0 0 3px rgba(30, 58, 138, 0.1);
+        }
+        
+        input:disabled, select:disabled {
+            background: #f3f4f6;
+            cursor: not-allowed;
+        }
+        
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .button-group {
+            margin-top: 35px;
+            display: flex;
+            gap: 15px;
+        }
+        
+        button {
+            padding: 14px 28px;
+            border: none;
+            border-radius: 4px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-submit {
+            flex: 1;
+            background: #1e3a8a;
+            color: white;
+        }
+        
+        .btn-submit:hover:not(:disabled) {
+            background: #1e40af;
+            box-shadow: 0 4px 12px rgba(30, 58, 138, 0.3);
+        }
+        
+        .btn-submit:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .signature-section {
+            background: #f9fafb;
+            padding: 25px;
+            border-radius: 4px;
+            border: 1px solid #e5e7eb;
+        }
+        
+        .signature-label {
+            color: #374151;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: block;
+        }
+        
+        .signature-info {
+            color: #6b7280;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+        
+        .signature-container {
+            position: relative;
+            background: white;
+            border: 2px solid #d1d5db;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        #signatureCanvas {
+            width: 100%;
+            height: 180px;
+            cursor: crosshair;
+            display: block;
+            touch-action: none;
+        }
+        
+        .btn-clear-signature {
+            margin-top: 12px;
+            padding: 10px 18px;
+            background: #6b7280;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s ease;
+        }
+        
+        .btn-clear-signature:hover {
+            background: #4b5563;
+        }
+        
+        .success-message, .error-message {
+            display: none;
+            padding: 16px 20px;
+            border-radius: 4px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+        
+        .success-message {
+            background: #d1fae5;
+            color: #065f46;
+            border: 1px solid #6ee7b7;
+        }
+        
+        .error-message {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 1px solid #fca5a5;
+        }
+        
+        #signatureError {
+            color: #dc2626;
+            font-size: 14px;
+            margin-top: 10px;
+            display: none;
+            font-weight: 500;
+        }
+        
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 30px;
+            background: #f9fafb;
+            border-radius: 4px;
+            margin-top: 20px;
+        }
+        
+        .spinner {
+            border: 4px solid #e5e7eb;
+            border-top: 4px solid #1e3a8a;
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .helper-text {
+            color: #6b7280;
+            font-size: 13px;
+            margin-top: 5px;
+        }
+        
+        @media (max-width: 768px) {
+            .form-row {
+                grid-template-columns: 1fr;
+            }
+            
+            .content {
+                padding: 25px;
+            }
+            
+            .header {
+                padding: 25px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Kündigungs-Formular GKV</h1>
+            <p>Bitte füllen Sie alle Felder vollständig aus</p>
+        </div>
+        
+        <div class="content">
+            <form id="kuendigungsForm">
+                <div class="form-section">
+                    <h2>Persönliche Daten</h2>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="anrede">Anrede <span class="required">*</span></label>
+                            <select id="anrede" required>
+                                <option value="">Bitte wählen</option>
+                                <option value="Herr">Herr</option>
+                                <option value="Frau">Frau</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label for="vorname">Vorname <span class="required">*</span></label>
+                            <input type="text" id="vorname" required placeholder="Max">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="nachname">Nachname <span class="required">*</span></label>
+                        <input type="text" id="nachname" required placeholder="Mustermann">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="strasse">Straße und Hausnummer <span class="required">*</span></label>
+                        <input type="text" id="strasse" required placeholder="Musterstraße 123">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="plz">Postleitzahl <span class="required">*</span></label>
+                            <input type="text" id="plz" required placeholder="12345" pattern="[0-9]{5}">
+                        </div>
+                        <div class="form-group">
+                            <label for="ort">Ort <span class="required">*</span></label>
+                            <input type="text" id="ort" required placeholder="Musterstadt">
+                        </div>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">E-Mail-Adresse <span class="required">*</span></label>
+                        <input type="email" id="email" required placeholder="max.mustermann@beispiel.de">
+                        <div class="helper-text">Ihre E-Mail-Adresse für Rückfragen</div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>Versicherungsdaten</h2>
+                    
+                    <div class="form-group">
+                        <label for="versicherungsnummer">Versicherungsnummer <span class="required">*</span></label>
+                        <input type="text" id="versicherungsnummer" required placeholder="U123456789">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="kuendigungsdatum">Gewünschtes Kündigungsdatum <span class="required">*</span></label>
+                        <input type="date" id="kuendigungsdatum" required>
+                        <div class="helper-text">Zum wann möchten Sie kündigen?</div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>Krankenkasse</h2>
+                    
+                    <div class="form-group">
+                        <label for="kk_name">Name der Krankenkasse <span class="required">*</span></label>
+                        <input type="text" id="kk_name" required placeholder="Techniker Krankenkasse">
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="kk_strasse">Straße der Krankenkasse <span class="required">*</span></label>
+                        <input type="text" id="kk_strasse" required placeholder="Bramfelder Straße 140">
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="kk_plz">PLZ <span class="required">*</span></label>
+                            <input type="text" id="kk_plz" required placeholder="22305" pattern="[0-9]{5}">
+                        </div>
+                        <div class="form-group">
+                            <label for="kk_ort">Ort <span class="required">*</span></label>
+                            <input type="text" id="kk_ort" required placeholder="Hamburg">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>Vertriebspartner</h2>
+                    
+                    <div class="form-group">
+                        <label for="email_vertrieb">E-Mail-Adresse Ihres Vertriebspartners <span class="required">*</span></label>
+                        <input type="email" id="email_vertrieb" required placeholder="partner@beispiel.de">
+                        <div class="helper-text">Die Kündigung wird an diese E-Mail-Adresse gesendet</div>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h2>Unterschrift</h2>
+                    
+                    <div class="signature-section">
+                        <span class="signature-label">Bitte unterschreiben Sie hier <span class="required">*</span></span>
+                        <div class="signature-info">Unterschreiben Sie mit der Maus oder mit dem Finger auf dem Touchscreen</div>
+                        
+                        <div class="signature-container">
+                            <canvas id="signatureCanvas"></canvas>
+                        </div>
+                        
+                        <button type="button" class="btn-clear-signature" id="clearSignature">Unterschrift löschen</button>
+                        
+                        <div id="signatureError">
+                            ⚠ Bitte setzen Sie Ihre Unterschrift
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="button-group">
+                    <button type="submit" class="btn-submit" id="submitBtn">Kündigung absenden</button>
+                </div>
+                
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p>Kündigung wird erstellt und versendet...</p>
+                </div>
+                
+                <div class="success-message" id="successMessage"></div>
+                <div class="error-message" id="errorMessage"></div>
+            </form>
+        </div>
+    </div>
+    
+    <script>
+        // ⚠️ WICHTIG: Ersetzen Sie diese URL durch Ihre n8n Webhook URL!
+        const N8N_WEBHOOK_URL = 'https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook';
+        
+        const form = document.getElementById('kuendigungsForm');
+        const successMessage = document.getElementById('successMessage');
+        const errorMessage = document.getElementById('errorMessage');
+        const loading = document.getElementById('loading');
+        const submitBtn = document.getElementById('submitBtn');
+        const signatureCanvas = document.getElementById('signatureCanvas');
+        const clearSignatureBtn = document.getElementById('clearSignature');
+        const signatureError = document.getElementById('signatureError');
+        
+        // Canvas Context
+        const ctx = signatureCanvas.getContext('2d', { willReadFrequently: true });
+        
+        let isDrawing = false;
+        let hasSignature = false;
+        let lastX = 0;
+        let lastY = 0;
+        
+        // Canvas-Größe richtig setzen
+        function resizeCanvas() {
+            const rect = signatureCanvas.getBoundingClientRect();
+            const dpr = window.devicePixelRatio || 1;
+            
+            signatureCanvas.width = rect.width * dpr;
+            signatureCanvas.height = rect.height * dpr;
+            
+            ctx.scale(dpr, dpr);
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 2;
+            
+            // Weißer Hintergrund
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+        }
+        
+        resizeCanvas();
+        window.addEventListener('resize', resizeCanvas);
+        
+        // Koordinaten berechnen
+        function getCoordinates(e) {
+            const rect = signatureCanvas.getBoundingClientRect();
+            let clientX, clientY;
+            
+            if (e.touches) {
+                clientX = e.touches[0].clientX;
+                clientY = e.touches[0].clientY;
+            } else {
+                clientX = e.clientX;
+                clientY = e.clientY;
+            }
+            
+            return {
+                x: clientX - rect.left,
+                y: clientY - rect.top
+            };
+        }
+        
+        // Zeichnen starten
+        function startDrawing(e) {
+            e.preventDefault();
+            isDrawing = true;
+            hasSignature = true;
+            signatureError.style.display = 'none';
+            
+            const coords = getCoordinates(e);
+            lastX = coords.x;
+            lastY = coords.y;
+            
+            ctx.beginPath();
+            ctx.moveTo(lastX, lastY);
+        }
+        
+        // Zeichnen
+        function draw(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            
+            const coords = getCoordinates(e);
+            
+            ctx.lineTo(coords.x, coords.y);
+            ctx.stroke();
+            
+            lastX = coords.x;
+            lastY = coords.y;
+        }
+        
+        // Zeichnen stoppen
+        function stopDrawing(e) {
+            if (!isDrawing) return;
+            e.preventDefault();
+            isDrawing = false;
+        }
+        
+        // Mouse Events
+        signatureCanvas.addEventListener('mousedown', startDrawing);
+        signatureCanvas.addEventListener('mousemove', draw);
+        signatureCanvas.addEventListener('mouseup', stopDrawing);
+        signatureCanvas.addEventListener('mouseleave', stopDrawing);
+        
+        // Touch Events
+        signatureCanvas.addEventListener('touchstart', startDrawing);
+        signatureCanvas.addEventListener('touchmove', draw);
+        signatureCanvas.addEventListener('touchend', stopDrawing);
+        signatureCanvas.addEventListener('touchcancel', stopDrawing);
+        
+        // Unterschrift löschen
+        clearSignatureBtn.addEventListener('click', () => {
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+            hasSignature = false;
+        });
+        
+        // Formular absenden
+        form.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            // Unterschrift prüfen
+            if (!hasSignature) {
+                signatureError.style.display = 'block';
+                signatureCanvas.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                return;
+            }
+            
+            // Button deaktivieren
+            submitBtn.disabled = true;
+            loading.style.display = 'block';
+            successMessage.style.display = 'none';
+            errorMessage.style.display = 'none';
+            
+            // Unterschrift als Base64
+            const signatureDataURL = signatureCanvas.toDataURL('image/png');
+            
+            // Daten sammeln
+            const formData = {
+                anrede: document.getElementById('anrede').value,
+                vorname: document.getElementById('vorname').value,
+                nachname: document.getElementById('nachname').value,
+                strasse: document.getElementById('strasse').value,
+                plz: document.getElementById('plz').value,
+                ort: document.getElementById('ort').value,
+                email_kunde: document.getElementById('email').value,
+                versicherungsnummer: document.getElementById('versicherungsnummer').value,
+                kuendigungsdatum: document.getElementById('kuendigungsdatum').value,
+                kk_name: document.getElementById('kk_name').value,
+                kk_strasse: document.getElementById('kk_strasse').value,
+                kk_plz: document.getElementById('kk_plz').value,
+                kk_ort: document.getElementById('kk_ort').value,
+                email_vertrieb: document.getElementById('email_vertrieb').value,
+                unterschrift: signatureDataURL
+            };
+            
+            console.log('Sende Daten an:', N8N_WEBHOOK_URL);
+            
+            try {
+                // An n8n senden
+                const response = await fetch(N8N_WEBHOOK_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+                
+                console.log('Response Status:', response.status);
+                
+                if (response.ok) {
+                    successMessage.innerHTML = '✅ <strong>Vielen Dank!</strong> Ihre Kündigung wurde erfolgreich versendet.<br><br>Ihr Vertriebspartner wird sich in Kürze bei Ihnen melden.';
+                    successMessage.style.display = 'block';
+                    
+                    // Formular zurücksetzen
+                    form.reset();
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(0, 0, signatureCanvas.width, signatureCanvas.height);
+                    hasSignature = false;
+                    
+                    // Nach oben scrollen
+                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                } else {
+                    throw new Error('Server-Fehler: ' + response.status);
+                }
+            } catch (error) {
+                console.error('Fehler:', error);
+                errorMessage.innerHTML = '❌ <strong>Fehler beim Versenden!</strong><br>Bitte versuchen Sie es erneut oder kontaktieren Sie Ihren Vertriebspartner direkt.';
+                errorMessage.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                submitBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html>
