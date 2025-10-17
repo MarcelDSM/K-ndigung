@@ -550,6 +550,7 @@
             const signatureDataURL = signatureCanvas.toDataURL('image/png');
             
             // Daten sammeln
+            document.addEventListener("DOMContentLoaded", function () {
             const formData = {
                 anrede: document.getElementById('anrede').value,
                 vorname: document.getElementById('vorname').value,
