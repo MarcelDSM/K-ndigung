@@ -412,15 +412,39 @@
         </div>
     </div>
     
-  <script>
+ <script src="https://cdn.jsdelivr.net/npm/signature_pad@4.0.0/dist/signature_pad.umd.min.js"></script>
+
+<script>
 document.addEventListener("DOMContentLoaded", function () {
+  // Canvas initialisieren
+  const canvas = document.querySelector("canvas");
+  const signaturePad = new SignaturePad(canvas, {
+    backgroundColor: "rgb(255, 255, 255)",
+  });
+
+  // Buttons
+  const clearButton = document.querySelector("#clear-signature");
+  if (clearButton) {
+    clearButton.addEventListener("click", function (e) {
+      e.preventDefault();
+      signaturePad.clear();
+    });
+  }
+
+  // Formular + Webhook
   const form = document.querySelector("form");
-  const N8N_WEBHOOK_URL = "https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook"; // <– deine echte Webhook-URL
+  const N8N_WEBHOOK_URL = "https://n8n.die-strategie-makler.de/webhook/kuendigung-webhook";
 
   form.addEventListener("submit", async function (e) {
     e.preventDefault();
 
-    // Daten sammeln
+    // Check, ob unterschrieben wurde
+    if (signaturePad.isEmpty()) {
+      alert("❌ Bitte unterschreiben Sie zuerst!");
+      return;
+    }
+
+    // Formular-Daten einsammeln
     const formData = {
       anrede: document.getElementById("anrede")?.value || "",
       vorname: document.getElementById("vorname")?.value || "",
@@ -436,11 +460,12 @@ document.addEventListener("DOMContentLoaded", function () {
       kk_strasse: document.getElementById("kk_strasse")?.value || "",
       kk_plz: document.getElementById("kk_plz")?.value || "",
       kk_ort: document.getElementById("kk_ort")?.value || "",
-      unterschrift: signaturePad?.toDataURL() || "",
+      unterschrift: signaturePad.toDataURL(),
     };
 
     console.log("📤 Sende an n8n:", formData);
 
+    // Daten an n8n senden
     try {
       const response = await fetch(N8N_WEBHOOK_URL, {
         method: "POST",
@@ -449,15 +474,15 @@ document.addEventListener("DOMContentLoaded", function () {
       });
 
       if (response.ok) {
-        alert("✅ Kündigung erfolgreich gesendet!");
+        alert("✅ Kündigung erfolgreich versendet!");
         form.reset();
-        if (typeof signaturePad !== "undefined") signaturePad.clear();
+        signaturePad.clear();
       } else {
-        alert("❌ Fehler beim Versenden – bitte versuchen Sie es erneut.");
+        alert("❌ Fehler beim Versenden. Bitte versuchen Sie es erneut.");
       }
     } catch (err) {
       console.error("Fehler beim Senden:", err);
-      alert("❌ Serverfehler – bitte später erneut versuchen.");
+      alert("⚠️ Serverfehler. Bitte später erneut versuchen.");
     }
   });
 });
